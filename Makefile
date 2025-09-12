@@ -49,7 +49,6 @@ release:
 	@echo "[INFO] Releasing a new version"
 	@echo "[INFO] Cleaning..."
 	@rm -rf target
-	@echo "[INFO] Creating release..."
-	@uv run maturin build --release
-	@echo "[INFO] Upload release..."
-	@uv run maturin upload --username __token__ --password $(PYPI_PASSWORD) target/wheels/*
+	@echo "[INFO] Create and upload release..."
+	@uv run maturin build --release && \
+		run maturin upload --username __token__ --password $(PYPI_PASSWORD) target/wheels/*
