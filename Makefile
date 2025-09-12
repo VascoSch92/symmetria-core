@@ -47,5 +47,9 @@ pre-commit:
 
 release:
 	@echo "[INFO] Releasing a new version"
-	@uv run maturin --release
+	@echo "[INFO] Cleaning..."
+	@rm -rf target
+	@echo "[INFO] Creating release..."
+	@uv run maturin build --release
+	@echo "[INFO] Upload release..."
 	@uv run maturin upload --username __token__ --password $(PYPI_PASSWORD)
