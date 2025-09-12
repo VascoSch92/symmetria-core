@@ -35,7 +35,9 @@ lint-rust:
 test-rust:
 	@echo "[INFO] Test Rust Code"
 	@cargo --version
-	@cargo test
+	@LIBDIR=$$(uv run python -c 'import sysconfig; print(sysconfig.get_config_var("LIBDIR"))') && \
+    	export LD_LIBRARY_PATH="$$LIBDIR:$$LD_LIBRARY_PATH" && \
+    	cargo test
 
 pre-commit:
 	@echo "[INFO] Run pre-commit"
