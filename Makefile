@@ -1,6 +1,7 @@
 
 # variables
-SOURCEDIR	= symmetria-core
+PYPI_PASSWORD   ?=
+SOURCEDIR		= symmetria-core
 
 help:
 	@echo "[HELP] Makefile commands:"
@@ -8,6 +9,7 @@ help:
 	@echo " * lint-rust: lint rust code"
 	@echo " * test-rust: test rust code"
 	@echo " * pre-commit: run the pre-commit"
+	@echo " * release: release a new version"
 
 .PHONY: help Makefile
 
@@ -42,3 +44,8 @@ test-rust:
 pre-commit:
 	@echo "[INFO] Run pre-commit"
 	@uv run pre-commit run --all-files
+
+release:
+	@echo "[INFO] Releasing a new version"
+	@uv run maturin --release
+	@uv run maturin upload --username __token__ --password $(PYPI_PASSWORD)

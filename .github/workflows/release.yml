@@ -1,16 +1,11 @@
-name: CI
+name: publish-release
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-
-permissions:
-  contents: read
+  release:
+    types: [published]
 
 jobs:
-  ci:
+  publish-release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -26,3 +21,7 @@ jobs:
         run: |
           make init
           make pre-commit
+      - name: publish release
+        run: |
+          export PYPI_PASSWORD=${{ secrets.PYPI_PASSWORD }}
+          make release
