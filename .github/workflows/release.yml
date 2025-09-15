@@ -23,5 +23,4 @@ jobs:
           make pre-commit
       - name: publish release
         run: |
-          export PYPI_PASSWORD=${{ secrets.PYPI_PASSWORD }}
           make release

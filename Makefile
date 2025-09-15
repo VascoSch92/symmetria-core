@@ -51,4 +51,4 @@ release:
 	@rm -rf target
 	@echo "[INFO] Create and upload release..."
 	@uv run maturin build --release && \
-		run maturin upload --username __token__ --password $(PYPI_PASSWORD) target/wheels/*
+		uv run maturin upload --username __token__ --password $(PYPI_PASSWORD) target/wheels/*
