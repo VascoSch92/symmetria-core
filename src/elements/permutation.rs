@@ -1,4 +1,6 @@
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+use std::collections::HashSet;
 
 /// Converts a permutation to its integer representation.
 ///
@@ -38,6 +40,36 @@ pub fn ascents(image: Vec<u32>) -> Vec<u32> {
             }
         })
         .collect()
+}
+
+/// Permutation acting on an integer
+#[pyfunction]
+pub fn call_on_int(image: Vec<u32>, idx: u32) -> u32 {
+    if (idx as usize) < image.len() {
+        image[(idx - 1) as usize]
+    } else {
+        idx
+    }
+}
+
+/// Permutation acting on a string
+#[pyfunction]
+pub fn call_on_str(image: Vec<u32>, string: String) -> PyResult<String> {
+    let chars: Vec<char> = string.chars().collect();
+
+    if image.len() > chars.len() {
+        return Err(PyValueError::new_err(format!(
+            "Not enough object to permute {} using the permutation {:?}.",
+            string, image,
+        )));
+    }
+
+    let mut result = chars.clone();
+    for (i, &perm) in image.iter().enumerate() {
+        // perm_index is the index in the original string whose char should go to position i
+        result[i] = chars[(perm - 1) as usize];
+    }
+    Ok(result.into_iter().collect())
 }
 
 /// Returns the 1-based descent positions in the given permutation.
@@ -106,6 +138,27 @@ pub fn lehmer_code(image: Vec<u32>) -> Vec<u32> {
     lehmer_code
 }
 
+/// Compute the inversions of a permutation
+#[pyfunction]
+pub fn inversions(image: Vec<u32>) -> Vec<(u32, u32)> {
+    let mut inversions: Vec<(u32, u32)> = Vec::new();
+    let mut min_element: u32 = 0;
+
+    for (i, p) in image.clone().into_iter().enumerate() {
+        if p == min_element {
+            min_element += 1;
+        } else {
+            for (j, q) in image[i..].iter().enumerate().skip(1) {
+                if p > *q {
+                    inversions.push(((i + 1).try_into().unwrap(), (i + j + 1).try_into().unwrap()))
+                }
+            }
+        }
+    }
+
+    inversions
+}
+
 fn factorial(n: usize) -> u64 {
     (1..=n as u64).product()
 }
@@ -129,12 +182,93 @@ pub fn lexicographic_rank(image: Vec<u32>) -> u64 {
     rank
 }
 
+/// Multiplication of two permutations
+#[pyfunction]
+pub fn multiplication(lhs: Vec<u32>, rhs: Vec<u32>) -> PyResult<Vec<u32>> {
+    if lhs.len() != rhs.len() {
+        return Err(PyValueError::new_err(format!(
+            "Cannot compose permutation {:?} with permutation {:?}, \nbecause they don't live in the same Symmetric group.",
+            lhs,
+            rhs
+        )));
+    }
+
+    Ok((0..lhs.len()).map(|i| lhs[(rhs[i] - 1) as usize]).collect())
+}
+
+/// Returns the record of a permutation
+#[pyfunction]
+pub fn records(image: Vec<u32>) -> Vec<u32> {
+    let mut records = vec![1];
+    let mut tmp_max = image[0];
+    let domain_upper_bound = *image.iter().max().unwrap() as usize;
+
+    for (i, img) in image.iter().enumerate().take(domain_upper_bound) {
+        if *img > tmp_max {
+            records.push((i + 1).try_into().unwrap());
+            tmp_max = *img;
+        }
+    }
+
+    records
+}
+
+/// Returns the support of a permutation
+#[pyfunction]
+pub fn support(image: Vec<u32>) -> HashSet<u32> {
+    let domain_upper_bound = *image.iter().max().unwrap() as usize;
+    let mut support: HashSet<u32> = HashSet::new();
+
+    for (i, img) in image.iter().enumerate().take(domain_upper_bound) {
+        if *img != (i + 1) as u32 {
+            support.insert((i + 1) as u32);
+        }
+    }
+
+    support
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_permutation_int() {
+    fn test_call_on_int() {
+        assert_eq!(call_on_int(vec![1, 2, 3], 1), 1);
+        assert_eq!(call_on_int(vec![1, 2, 3], 2), 2);
+        assert_eq!(call_on_int(vec![1, 2, 3], 3), 3);
+        assert_eq!(call_on_int(vec![1, 2, 3], 10), 10);
+        assert_eq!(call_on_int(vec![2, 1, 3], 1), 2);
+        assert_eq!(call_on_int(vec![4, 5, 6, 3, 2, 1], 4), 3);
+    }
+
+    #[test]
+    fn test_call_on_str() {
+        // not valid
+        assert!(call_on_str(vec![1, 2, 3], "ab".to_string()).is_err());
+        assert!(call_on_str(vec![1, 2, 3], "".to_string()).is_err());
+
+        // valid
+        assert_eq!(
+            call_on_str(vec![], "abc".to_string()).unwrap(),
+            "abc".to_string()
+        );
+        assert_eq!(
+            call_on_str(vec![1, 2, 3], "abc".to_string()).unwrap(),
+            "abc".to_string()
+        );
+        assert_eq!(
+            call_on_str(vec![2, 1], "ab".to_string()).unwrap(),
+            "ba".to_string()
+        );
+        assert_eq!(
+            call_on_str(vec![2, 1], "abc".to_string()).unwrap(),
+            "bac".to_string()
+        );
+    }
+
+    #[test]
+    fn test_int() {
         assert_eq!(int_repr(vec![1]), 1);
         assert_eq!(int_repr(vec![2, 1]), 21);
         assert_eq!(int_repr(vec![1, 2, 3]), 123);
@@ -144,14 +278,14 @@ mod tests {
     }
 
     #[test]
-    fn test_permutation_repr() {
+    fn test_repr() {
         assert_eq!(repr(vec![1]), "Permutation(1)");
         assert_eq!(repr(vec![1, 2]), "Permutation(1, 2)");
         assert_eq!(repr(vec![1, 3, 2]), "Permutation(1, 3, 2)")
     }
 
     #[test]
-    fn test_permutation_ascents() {
+    fn test_ascents() {
         assert_eq!(ascents(vec![4, 3, 2, 1]), Vec::<u32>::new());
         assert_eq!(ascents(vec![1, 2, 3]), vec![1, 2]);
         assert_eq!(ascents(vec![3, 4, 6, 2, 1, 5]), vec![1, 2, 5]);
@@ -159,14 +293,14 @@ mod tests {
     }
 
     #[test]
-    fn test_permutation_descents() {
+    fn test_descents() {
         assert_eq!(descents(vec![1, 2, 3]), Vec::<u32>::new());
         assert_eq!(descents(vec![3, 4, 5, 2, 1, 6, 7]), vec![3, 4]);
         assert_eq!(descents(vec![4, 3, 2, 1]), vec![1, 2, 3]);
     }
 
     #[test]
-    fn test_permutation_exceedances() {
+    fn test_exceedances() {
         assert_eq!(exceedances(vec![1, 2, 3], false), Vec::<u32>::new());
         assert_eq!(exceedances(vec![1, 2, 3], true), vec![1, 2, 3]);
         assert_eq!(exceedances(vec![4, 3, 2, 1], false), vec![1, 2]);
@@ -178,7 +312,17 @@ mod tests {
     }
 
     #[test]
-    fn test_permutation_is_derangement() {
+    fn test_inversions() {
+        assert_eq!(inversions(vec![1, 2, 3]), Vec::new());
+        assert_eq!(inversions(vec![1, 3, 4, 2]), vec![(2, 4), (3, 4)]);
+        assert_eq!(
+            inversions(vec![3, 1, 2, 5, 4]),
+            vec![(1, 2), (1, 3), (4, 5)]
+        );
+    }
+
+    #[test]
+    fn test_is_derangement() {
         assert_eq!(is_derangement(vec![1]), false);
         assert_eq!(is_derangement(vec![2, 1]), true);
         assert_eq!(is_derangement(vec![1, 3, 2]), false);
@@ -213,5 +357,38 @@ mod tests {
         assert_eq!(lexicographic_rank(vec![3, 2, 1]), 6);
         assert_eq!(lexicographic_rank(vec![3, 2, 1, 4]), 15);
         assert_eq!(lexicographic_rank(vec![1, 2, 5, 4, 3]), 6);
+    }
+
+    #[test]
+    fn test_multiplication() {
+        // not valid
+        assert!(multiplication(vec![1], vec![1, 2]).is_err());
+        assert!(multiplication(vec![1, 2, 3], vec![1, 2]).is_err());
+        // valid
+        assert_eq!(multiplication(vec![1], vec![1]).unwrap(), vec![1]);
+        assert_eq!(multiplication(vec![1, 2], vec![1, 2]).unwrap(), vec![1, 2]);
+        assert_eq!(
+            multiplication(vec![1, 2, 3], vec![3, 2, 1]).unwrap(),
+            vec![3, 2, 1]
+        );
+        assert_eq!(
+            multiplication(vec![3, 4, 5, 1, 2], vec![3, 5, 1, 2, 4]).unwrap(),
+            vec![5, 2, 3, 4, 1]
+        );
+    }
+
+    #[test]
+    fn test_records() {
+        assert_eq!(records(vec![1, 2, 3]), vec![1, 2, 3]);
+        assert_eq!(records(vec![3, 1, 2]), vec![1]);
+        assert_eq!(records(vec![1, 3, 4, 5, 2, 6]), vec![1, 2, 3, 4, 6]);
+    }
+
+    #[test]
+    fn test_support() {
+        assert_eq!(support(vec![1]), HashSet::new());
+        assert_eq!(support(vec![2, 1]), HashSet::from([1, 2]));
+        assert_eq!(support(vec![1, 3, 2]), HashSet::from([2, 3]));
+        assert_eq!(support(vec![1, 4, 3, 2]), HashSet::from([2, 4]));
     }
 }
