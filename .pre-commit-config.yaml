@@ -10,12 +10,6 @@ repos:
 
   - repo: local
     hooks:
-      - id: cargo-check
-        name: Cargo Check
-        entry: cargo check
-        types: [rust]
-        language: system
-        pass_filenames: false
       - id: lint-rust
         name: Lint Rust
         entry: make lint-rust
