@@ -50,6 +50,6 @@ release:
 	@echo "[INFO] Cleaning..."
 	@rm -rf target
 	@echo "[INFO] Create and upload release..."
-	@uv run maturin build --release && \
-		ls symmetria-core/release/wheels
-		uv run maturin upload --username __token__ --password $(PYPI_PASSWORD) --find
+	@uv run maturin build --release
+	@echo "[DEBUG] $$(ls target/wheels)"
+	@uv run maturin publish --username __token__ --password $(PYPI_PASSWORD)
