@@ -50,6 +50,4 @@ release:
 	@echo "[INFO] Cleaning..."
 	@rm -rf target
 	@echo "[INFO] Create and upload release..."
-	@uv run maturin build --release
-	@echo "[DEBUG] $$(ls target/wheels)"
-	@uv run maturin publish --username __token__ --password $(PYPI_PASSWORD)
+	@uv run maturin build --release && uv run maturin publish --username __token__ --password $(PYPI_PASSWORD)
