@@ -22,5 +22,7 @@ jobs:
           make init
           make pre-commit
       - name: publish release
+        env:
+          PYPI_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
           make release
