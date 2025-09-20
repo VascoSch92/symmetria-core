@@ -136,7 +136,7 @@ dependencies = [
 
 [[package]]
 name = "symmetria-core"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "pyo3",
 ]
