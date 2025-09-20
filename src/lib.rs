@@ -12,6 +12,9 @@ use pyo3::prelude::*;
 
 #[pymodule]
 fn _symmetria_core(py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
+    let table = PyModule::new(py, "table")?;
+    table.add_class::<crate::elements::table::Table>()?;
+
     let validators = PyModule::new(py, "validators")?;
     validators.add_function(wrap_pyfunction!(validate_permutation, py)?)?;
     validators.add_function(wrap_pyfunction!(validate_cycle, py)?)?;
@@ -33,6 +36,7 @@ fn _symmetria_core(py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     permutation.add_function(wrap_pyfunction!(records, py)?)?;
     permutation.add_function(wrap_pyfunction!(support, py)?)?;
 
+    m.add_submodule(&table)?;
     m.add_submodule(&validators)?;
     m.add_submodule(&permutation)?;
 
