@@ -67,7 +67,7 @@ pub fn call_on_str(image: Vec<u32>, string: String) -> PyResult<String> {
     let mut result = chars.clone();
     for (i, &perm) in image.iter().enumerate() {
         // perm_index is the index in the original string whose char should go to position i
-        result[i] = chars[(perm - 1) as usize];
+        result[(perm - 1) as usize] = chars[i];
     }
     Ok(result.into_iter().collect())
 }
@@ -266,6 +266,10 @@ mod tests {
         assert_eq!(
             call_on_str(vec![2, 1], "abc".to_string()).unwrap(),
             "bac".to_string()
+        );
+        assert_eq!(
+            call_on_str(vec![3, 1, 2], "abc".to_string()).unwrap(),
+            "bca".to_string()
         );
     }
 
