@@ -45,7 +45,7 @@ pub fn ascents(image: Vec<u32>) -> Vec<u32> {
 /// Permutation acting on an integer
 #[pyfunction]
 pub fn call_on_int(image: Vec<u32>, idx: u32) -> u32 {
-    if (idx as usize) < image.len() {
+    if (idx as usize) <= image.len() {
         image[(idx - 1) as usize]
     } else {
         idx
@@ -234,9 +234,11 @@ mod tests {
 
     #[test]
     fn test_call_on_int() {
+        assert_eq!(call_on_int(vec![2, 1], 2), 1);
         assert_eq!(call_on_int(vec![1, 2, 3], 1), 1);
         assert_eq!(call_on_int(vec![1, 2, 3], 2), 2);
         assert_eq!(call_on_int(vec![1, 2, 3], 3), 3);
+        assert_eq!(call_on_int(vec![1, 3, 2], 17), 17);
         assert_eq!(call_on_int(vec![1, 2, 3], 10), 10);
         assert_eq!(call_on_int(vec![2, 1, 3], 1), 2);
         assert_eq!(call_on_int(vec![4, 5, 6, 3, 2, 1], 4), 3);
