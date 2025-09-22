@@ -86,7 +86,7 @@ pub fn repr(cycle: Vec<u32>) -> String {
             .iter()
             .map(|element| element.to_string())
             .collect::<Vec<_>>()
-            .join(" ")
+            .join(", ")
     )
 }
 
@@ -181,8 +181,8 @@ mod tests {
     #[test]
     fn test_repr() {
         assert_eq!(repr(vec![1]), "Cycle(1)".to_string());
-        assert_eq!(repr(vec![1, 2, 3]), "Cycle(1 2 3)".to_string());
-        assert_eq!(repr(vec![1, 2]), "Cycle(1 2)".to_string());
+        assert_eq!(repr(vec![1, 2, 3]), "Cycle(1, 2, 3)".to_string());
+        assert_eq!(repr(vec![1, 2]), "Cycle(1, 2)".to_string());
     }
 
     #[test]
