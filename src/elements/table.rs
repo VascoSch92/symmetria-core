@@ -1,11 +1,10 @@
 use pyo3::prelude::*;
-use std::collections::HashMap;
 
 #[pyclass]
 pub struct Table {
     #[pyo3(get, set)]
     title: String,
-    _rows: HashMap<String, String>,
+    _rows: Vec<(String, String)>,
     _max_length_row: usize,
 }
 
@@ -15,14 +14,14 @@ impl Table {
     fn new(title: String) -> Self {
         Table {
             title,
-            _rows: HashMap::new(),
+            _rows: Vec::new(),
             _max_length_row: 0,
         }
     }
 
     pub fn add(&mut self, attribute: String, value: String) -> PyResult<()> {
         self._max_length_row = self._max_length_row.max(attribute.len() + value.len());
-        self._rows.insert(attribute, value);
+        self._rows.push((attribute, value));
         Ok(())
     }
 
@@ -74,8 +73,7 @@ mod tests {
         table.add("Name".to_string(), "Alice".to_string()).unwrap();
 
         assert_eq!(table._rows.len(), 1);
-        assert!(table._rows.contains_key("Name"));
-        assert_eq!(table._rows["Name"], "Alice");
+        assert_eq!(table._rows[0], ("Name".to_string(), "Alice".to_string()));
     }
 
     #[test]
